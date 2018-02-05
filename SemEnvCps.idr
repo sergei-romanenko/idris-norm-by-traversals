@@ -34,36 +34,41 @@ snf t =
   let (t1, r1) = eval t [] False id
   in cloToTm t1 r1
 
+--
 -- Tests.
+--
 
 run : (t : Tm) -> String
 run t = show $ assert_total $ snf t
 
+--
 -- Substitutions.
+--
 
 -- (\x y => x y y0) y = (\y1 => y y1 y0)
-runSubst5 : run Subst5 = "(y1 => ((y y1) y0))"
-runSubst5 = Refl
+tstSubst5 : run Subst5 = "(y1 => ((y y1) y0))"
+tstSubst5 = Refl
+--
 
 --
 -- Church numerals.
 --
 
-runC1 : run C1 = "(s => (z => (s z)))"
-runC1 = Refl
+tstC1 : run C1 = "(s => (z => (s z)))"
+tstC1 = Refl
 
-runC2 : run C2 = "(s => (z => (s (s z))))"
-runC2 = Refl
+tstC2 : run C2 = "(s => (z => (s (s z))))"
+tstC2 = Refl
 
-runP22 : run P22 = "(s => (z => (s (s (s (s z))))))"
-runP22 = Refl
+tstP22 : run P22 = "(s => (z => (s (s (s (s z))))))"
+tstP22 = Refl
 
-runM22 : run M22 = "(s => (z => (s (s (s (s z))))))"
-runM22 = Refl
+tstM22 : run M22 = "(s => (z => (s (s (s (s z))))))"
+tstM22 = Refl
 
 --
 -- Combinators
 --
 
-runSKK : run SKK = "(z => z)"
-runSKK = Refl
+tstSKK : run SKK = "(z => z)"
+tstSKK = Refl

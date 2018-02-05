@@ -99,24 +99,28 @@ substTm t n u =
                      in Lam m' (assert_total $ substTm t0' n u)
     (App t1 t2) => App (substTm t1 n u) (substTm t2 n u)
 
+--
+-- Tests.
+--
+
 %access private
 
 run : (t : Tm) -> (n : Name) -> (u : Tm) -> String
 run t n u = show $ substTm t n u
 
-Subst1 : run (Var "x") "y" (Var "z") = "x"
-Subst1 = Refl
+subst1 : run (Var "x") "y" (Var "z") = "x"
+subst1 = Refl
 
-Subst2 : run (Var "x") "x" (Var "z") = "z"
-Subst2 = Refl
+subst2 : run (Var "x") "x" (Var "z") = "z"
+subst2 = Refl
 
-Subst3 : run (Lam "x" (Var "x")) "x" (Var "z") = "(x => x)"
-Subst3 = Refl
+subst3 : run (Lam "x" (Var "x")) "x" (Var "z") = "(x => x)"
+subst3 = Refl
 
-Subst4 : run (Lam "y" (Var "x")) "x" (Var "z") = "(y => z)"
-Subst4 = Refl
+subst4 : run (Lam "y" (Var "x")) "x" (Var "z") = "(y => z)"
+subst4 = Refl
 
-Subst5 : run (Lam "y" (App (App (Var "x") (Var "y")) (Var "y0")))
+subst5 : run (Lam "y" (App (App (Var "x") (Var "y")) (Var "y0")))
              "x" (Var "y") =
              "(y1 => ((y y1) y0))"
-Subst5 = Refl
+subst5 = Refl

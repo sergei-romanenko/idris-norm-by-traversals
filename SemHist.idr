@@ -1,7 +1,7 @@
 module SemHist
 
 --
--- Semantics based on histories.
+-- Semantics based on histories and generating fresh variables.
 --
 
 import Terms
@@ -22,24 +22,7 @@ mutual
 implementation Show Item where
   show (HI t w b c) = show t
 
--- Renaming variables.
-
-{-
-fvh : (h : Hist) -> List Name
-fvh [] = []
-fvh ((HI t w b c) :: h) =
-  fv t ++ (fvh b ++ (fvh c ++ fvh h))
-
--- `(Lam x t)` is supposed to appear in `h`.
-
-rename : (x : Name) -> (t : Tm) -> (h : Hist) -> (Name, Tm)
-rename x t h =
-  let ns = fvh h in
-  if elem x ns
-  then (let y = fresh x ns
-        in (y, substTm t x (Var y)))
-  else (x , t)
--}
+-- Renaming bound variables.
 
 rename : (j : Nat) -> (x : Name) -> (t : Tm) -> (h : Hist) -> (Name, Tm)
 rename j x t h = (y, substTm t x (Var y))
@@ -60,6 +43,10 @@ lookup n (hi :: _) = case hi of
     True => (Var "", [])
     False => lookup n b
   HI _ _ b _ => lookup n b
+
+-- Note that `eval` and `apk` are tail-recursive!
+-- Hence, the counter that is used for producing fresh variables is
+-- easy to mantain.
 
 mutual
 
@@ -109,16 +96,14 @@ clean' ((HI (Lam n t0) False b c) :: h) i =
   clean' h (S i)
 clean' ((HI (App t1 t2) w b c) :: h) i =
   clean' h (S i)
---clean' ((HI t w b c) :: h) i =
---  clean' h (S i)
 
 partial
 clean : Hist -> List Item
 clean h = map snd $ filter (\(i, _) => not (elem i (clean' h 1)))
                            (zip [1 .. S (length h)] h)
 
-
 -- Building the normalized term from the cleaned history.
+-- `build'` is tail-recursive, which is in harmony with `eval`.
 
 build' : (h : Hist) -> (ts : List Tm) -> Tm
 build' [] (t :: ts) = t
@@ -140,46 +125,47 @@ partial
 snf : (t : Tm) -> Tm
 snf = build . clean . reverse . evalTm
 
+--
 -- Tests.
+--
 
-runH : (t : Tm) -> String
-runH t =
+run : (t : Tm) -> String
+run t =
   show $ build $ assert_total $ clean $ reverse $ assert_total $ evalTm t
 
-run1 : (t : Tm) -> String
-run1 t = show $ assert_total $ {- clean $-} reverse $ assert_total $ evalTm t
+tst : (t : Tm) -> (expected : String) -> String
+tst t expected =
+  show t ++ " ~~~> " ++ produced ++ "  " ++
+    (if expected == produced then "OK" else "Wrong! Expected: " ++ expected)
+  where produced : String
+        produced = run t
 
-runTest : (t : Tm) -> (expected : String) -> IO ()
-runTest t expected =
-  do putStrLn (show $ t)
-
+--
 -- Substitutions.
+--
 
--- (\x y => x y y0) y = (\y1 => y y1 y0)
---runSubst5 : runH Subst5 = "(y1 => ((y y1) y0))"
---runSubst5 = Refl
+tstSubst5 : String
+tstSubst5 = tst Subst5 "(#1 => ((y #1) y0))"
 
-{-
 --
 -- Church numerals.
 --
 
-runC1 : runH C1 = "(s => (z => (s z)))"
-runC1 = Refl
+tstC1 : String
+tstC1 = tst C1 "(#1 => (#2 => (#1 #2)))"
 
-runC2 : runH C2 = "(s => (z => (s (s z))))"
-runC2 = Refl
+tstC2 : String
+tstC2 = tst C2 "(#1 => (#2 => (#1 (#1 #2))))"
 
-runP22 : runH P22 = "(s => (z => (s (s (s (s z))))))"
-runP22 = Refl
+tstP22 : String
+tstP22 = tst P22 "(#2 => (#3 => (#2 (#2 (#2 (#2 #3))))))"
 
-runM22 : runH M22 = "(s => (z => (s (s (s (s z))))))"
-runM22 = Refl
+tstM22 : String
+tstM22 = tst M22 "(#2 => (#3 => (#2 (#2 (#2 (#2 #3))))))"
 
 --
 -- Combinators
 --
 
-runSKK : runH SKK = "(z => z)"
-runSKK = Refl
--}
+tstSKK : String
+tstSKK = tst SKK "(#2 => #2)"

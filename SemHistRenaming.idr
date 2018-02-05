@@ -1,7 +1,9 @@
 module SemHistRenaming
 
 --
--- Semantics based on histories.
+-- Semantics based on histories and renaming bound variables.
+-- Note that this version is TERRIBLY inefficient, because it
+-- repeatedly recomputes the sets of variables free in the histories.
 --
 
 import Terms
@@ -133,46 +135,46 @@ partial
 snf : (t : Tm) -> Tm
 snf = build . clean . reverse . evalTm
 
+--
 -- Tests.
+--
 
-runH : (t : Tm) -> String
-runH t =
+run : (t : Tm) -> String
+run t =
   show $ build $ assert_total $ clean $ reverse $ assert_total $ evalTm t
 
-run1 : (t : Tm) -> String
-run1 t = show $ assert_total $ {- clean $-} reverse $ assert_total $ evalTm t
-
-runTest : (t : Tm) -> (expected : String) -> IO ()
-runTest t expected =
-  do putStrLn (show $ t)
+tst : (t : Tm) -> (expected : String) -> String
+tst t expected =
+  show t ++ " ~~~> " ++ produced ++ "  " ++
+    (if expected == produced then "OK" else "Wrong! Expected: " ++ expected)
+  where produced : String
+        produced = run t
 
 -- Substitutions.
 
--- (\x y => x y y0) y = (\y1 => y y1 y0)
-runSubst5 : runH Subst5 = "(y1 => ((y y1) y0))"
-runSubst5 = Refl
+tstSubst5 : String
+tstSubst5 = tst Subst5 "(y1 => ((y y1) y0))"
 
-{-
+
 --
 -- Church numerals.
 --
 
-runC1 : runH C1 = "(s => (z => (s z)))"
-runC1 = Refl
+tstC1 : String
+tstC1 = tst C1 "(#1 => (#2 => (#1 #2)))"
 
-runC2 : runH C2 = "(s => (z => (s (s z))))"
-runC2 = Refl
+tstC2 : String
+tstC2 = tst C2 "(s => (z => (s z)))"
 
-runP22 : runH P22 = "(s => (z => (s (s (s (s z))))))"
-runP22 = Refl
+tstP22 : String
+tstP22 = tst P22 "(s => (z => (s (s (s (s z))))))"
 
-runM22 : runH M22 = "(s => (z => (s (s (s (s z))))))"
-runM22 = Refl
+tstM22 : String
+tstM22 = tst M22 "(s => (z => (s (s (s (s z))))))"
 
 --
 -- Combinators
 --
 
-runSKK : runH SKK = "(z => z)"
-runSKK = Refl
--}
+tstSKK : String
+tstSKK = tst SKK "(z => z)"
