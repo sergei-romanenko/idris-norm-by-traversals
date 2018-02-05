@@ -1,6 +1,5 @@
 module SemEnv
 
-
 --
 -- Semantics based on environments.
 --
@@ -57,13 +56,11 @@ eval (Var n) r w =
   case lookup n r of
     Nothing => (Var n, [])
     Just (t1, r1) => eval t1 r1 w
-eval (Lam n t0) r True =
-  let (n1, t1) = rename n t0 r
-  in (Lam n1 t1, r)
-eval (Lam n t0) r False =
-  let (n1, t1) = rename n t0 r
-      (t2, _) = eval t1 (remove n1 r) False
-  in (Lam n1 t2, r)
+eval (Lam n t0) r w =
+  let (n1, t1) = rename n t0 r in
+  case w of
+    True => (Lam n1 t1, r)
+    False => let (t2, _) = eval t1 (remove n1 r) False in (Lam n1 t2, r)
 eval (App f t) r w =
   let (f1, r1) = eval f r True in
   case f1 of

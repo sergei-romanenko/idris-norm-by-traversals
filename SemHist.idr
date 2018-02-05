@@ -52,28 +52,33 @@ mutual
 
   partial
   eval : (h : Hist) -> (j : Nat) -> Hist
-  eval [] j = [HI (Var "") False [] []] -- Remove?
   eval h j = case h of
     HI t w b c :: h' => case t of
       (Var n) => case lookup n b of
-        (Var "", _) => apk t c h j
+        (Var "", _) => apkVar n c h j
         (t', b') => eval (HI t' w b' c :: h) j
       (Lam n t0) =>
         let (n1, t1) = rename j n t0 h
             h1 = HI (Lam n1 t1) w b c :: h'
         in
         case w of
-          True => apk (Lam n1 t1) c h1 (S j)
+          True => apkLam n1 t1 c h1 (S j)
           False => eval (HI t1 False h1 c :: h1) (S j)
       (App t1 t2) =>
         eval (HI t1 True b h :: h) j
 
   partial
-  apk : (t : Tm) -> (c, h : Hist) -> (j : Nat) -> Hist
-  apk t [] h j = h
-  apk t (HI (App t1 t2) w b c :: _) h j = case t of
-    (Lam n t0) => eval (HI t0 w h c :: h) j
-    _ => eval (HI t2 False b c :: h) j
+  apkVar : (n : Name) ->  (c, h : Hist) -> (j : Nat) -> Hist
+  apkVar n [] h j = h
+  apkVar n (HI (App t1 t2) w b c :: _) h j =
+    eval (HI t2 False b c :: h) j
+
+  partial
+  apkLam : (n1 : Name) ->  (t1 : Tm) -> (c, h : Hist) -> (j : Nat) -> Hist
+  apkLam n t0 [] h j = h
+  apkLam n t0 (HI (App t1 t2) w b c :: _) h j =
+    eval (HI t0 w h c :: h) j
+
 
 partial
 evalTm : (t : Tm) -> Hist

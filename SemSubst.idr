@@ -21,18 +21,18 @@ wnf (App t1 t2) =
     t => App t t2
 
 covering
-eval : (t : Tm) -> Tm
-eval (Var n) = Var n
-eval (Lam n t0) = Lam n (eval t0)
-eval (App t1 t2) =
+snf : (t : Tm) -> Tm
+snf (Var n) = Var n
+snf (Lam n t0) = Lam n (snf t0)
+snf (App t1 t2) =
   case wnf t1 of
-    Lam n t0 => eval (substTm t0 n t2)
-    t => App (eval t) (eval t2)
+    Lam n t0 => snf (substTm t0 n t2)
+    t => App (snf t) (snf t2)
 
 -- Tests.
 
 run : (t : Tm) -> String
-run t = show $ assert_total $ eval t
+run t = show $ assert_total $ snf t
 
 --
 -- Substitutions.

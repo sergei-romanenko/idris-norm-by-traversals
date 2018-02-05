@@ -16,12 +16,11 @@ eval (Var n) r w k =
   case lookup n r of
     Nothing => k (Var n, [])
     Just (t1, r1) => eval t1 r1 w k
-eval (Lam n t0) r True k =
-  let (n1, t1) = rename n t0 r
-  in k (Lam n1 t1, r)
-eval (Lam n t0) r False k =
-  let (n1, t1) = rename n t0 r
-  in eval t1 (remove n1 r) False (\(t2, _) => k (Lam n1 t2, r))
+eval (Lam n t0) r w k =
+  let (n1, t1) = rename n t0 r in
+  case w of
+    True => k (Lam n1 t1, r)
+    False => eval t1 (remove n1 r) False (\(t2, _) => k (Lam n1 t2, r))
 eval (App f t) r w k =
   eval f r True (\(f1, r1) =>
     case f1 of
