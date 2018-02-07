@@ -1,0 +1,15 @@
+package nbt
+
+--opts = ""
+
+modules =
+    Terms,
+    ExampleTerms,
+    SemSubst,
+    SemEnv,
+    SemEnvCps,
+    SemHistRenaming,
+    SemHist,
+
+    Proofs.Terms
+    Proofs.SemSubst

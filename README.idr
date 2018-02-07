@@ -7,3 +7,6 @@ import SemEnv
 import SemEnvCps
 import SemHistRenaming
 import SemHist
+
+import Proofs.Terms
+import Proofs.SemSubst
