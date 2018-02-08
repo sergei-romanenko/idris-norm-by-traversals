@@ -117,3 +117,31 @@ mutual
   pSnfA : (n1 : WNf) -> (t2 : Tm) -> SNf
   pSnfA (WLam x t0) t2 = pSnf (substTm t0 x t2)
   pSnfA (WNeu m) t2 = SNeu (SApp (pSne m) (pSnf t2))
+
+mutual
+
+  data DS : (t : Tm) -> Type where
+    DSVar : DS (Var x)
+    DSLam : (d0 : DS t0) -> DS (Lam x t0)
+    DSApp : (d1 : DW t1) -> (d2 : DSA (tWnf t1 d1) t2) -> DS (App t1 t2)
+
+  data DSNe : (m : WNe) -> Type where
+    DSNeLam : DSNe (WVar x)
+    DSNeNeu : (dm : DSNe m) -> (dt : DS t) -> DSNe (WApp m t)
+
+  data DSA : (n1 : WNf) -> (t2 : Tm) -> Type where
+    DSALam : (d0 : DS (substTm t0 x t2)) -> DSA (WLam x t0) t2
+    DSANeu : (dn : DSNe m) -> (d2 : DS t2) -> DSA (WNeu m) t2
+
+  tSnf : (t : Tm) -> (d : DS t) -> SNf
+  tSnf (Var x) DSVar = SNeu (SVar x)
+  tSnf (Lam x t0) (DSLam d0) = SLam x (tSnf t0 d0)
+  tSnf (App t1 t2) (DSApp d1 d2) = tSnfA (tWnf t1 d1) t2 d2
+
+  tSne : (m : WNe) -> (d : DSNe m) -> SNe
+  tSne (WVar x) DSNeLam = SVar x
+  tSne (WApp m t) (DSNeNeu dm dt) = SApp (tSne m dm) (tSnf t dt)
+
+  tSnfA : (n1 : WNf) -> (t2 : Tm) -> (d : DSA n1 t2) -> SNf
+  tSnfA (WLam x t0) t2 (DSALam d0) = tSnf (substTm t0 x t2) d0
+  tSnfA (WNeu m) t2 (DSANeu dm d2) = SNeu (SApp (tSne m dm) (tSnf t2 d2))
